@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name              超级翻译助手
 // @namespace         https://github.com/syhyz1990/translate
-// @version           1.0.0
+// @version           1.0.1
 // @author            YouXiaoHou
 // @description       用鼠标选中文字，按下快捷键（默认为F9），可自动翻译文字。已支持超过 14 种语言。
 // @license           MIT
@@ -178,28 +178,62 @@
                     util.setValue('setting_success_times', util.getValue('setting_success_times') + 1);
                     return res.data;
                 }
-                return '';
+                return res?.msg || '';
             } catch (e) {
                 return '';
             }
         },
 
         async showPopup(selectedText, translatedText) {
-            let html = `<div class="translate-wrapper">
-                          <div class="translate-box"> 
-                            <div class="left-side">
-                                <div class="translate-title"><div class="translate-lang">${util.parseLanguage(util.getValue('from'))}</div><button class="translate-btn" title="点击翻译左侧文本">翻译</button></div>
-                                <textarea class="translate-textarea" placeholder="请输入要翻译的内容">${selectedText}</textarea>
-                                <div class="translate-toolbar"><span id="word-count">字数：${selectedText.length}</span></div>
-                            </div>
-                            <div class="right-side">
-                                <div class="translate-title"><div class="translate-lang">${util.parseLanguage(util.getValue('to'))}</div></div>
-                                <div class="translate-target">${translatedText}</div>
-                                <div class="translate-toolbar"><svg class="translate-copy" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" width="18" height="18"><path d="M672 832H224c-52.928 0-96-43.072-96-96V160c0-52.928 43.072-96 96-96h448c52.928 0 96 43.072 96 96v576c0 52.928-43.072 96-96 96zM224 128c-17.632 0-32 14.368-32 32v576c0 17.664 14.368 32 32 32h448c17.664 0 32-14.336 32-32V160c0-17.632-14.336-32-32-32H224z"/><path d="M800 960H320c-17.664 0-32-14.304-32-32s14.336-32 32-32h480c17.664 0 32-14.336 32-32V256c0-17.664 14.304-32 32-32s32 14.336 32 32v608c0 52.928-43.072 96-96 96zM544 320H288c-17.664 0-32-14.336-32-32s14.336-32 32-32h256c17.696 0 32 14.336 32 32s-14.304 32-32 32zm64 160H288.032c-17.664 0-32-14.336-32-32s14.336-32 32-32H608c17.696 0 32 14.336 32 32s-14.304 32-32 32z"/><path d="M608 640H288c-17.664 0-32-14.304-32-32s14.336-32 32-32h320c17.696 0 32 14.304 32 32s-14.304 32-32 32z"/></svg><span class="translate-copy-tip"></span></div>
-                            </div>
-                          </div>
-                        <div class="translate-footer"><a href="https://www.youxiaohou.com/tool/install-translate.html" target="_blank">油小猴翻译助手</a> 为您提供翻译服务</div>
-                        </div>`;
+            let commonLangFrom = ['auto', 'zh-CN', 'en'];
+            let commonLangTo = ['zh-CN', 'en', 'zh-TW'];
+            let langFrom = util.getValue('from');
+            let langTo = util.getValue('to');
+            if (!commonLangFrom.includes(langFrom)) commonLangFrom.push(langFrom);
+            if (!commonLangTo.includes(langTo)) commonLangTo.push(langTo);
+            let langDomFrom = commonLangFrom.map(val => {
+                if (val === langFrom) {
+                    return `<div class="item on" data-lang="${val}">${languageMap[val]}</div>`;
+                } else {
+                    return `<div class="item" data-lang="${val}">${languageMap[val]}</div>`;
+                }
+            }).join('');
+            let langDomTo = commonLangTo.map(val => {
+                if (val === langTo) {
+                    return `<div class="item on" data-lang="${val}">${languageMap[val]}</div>`;
+                } else {
+                    return `<div class="item" data-lang="${val}">${languageMap[val]}</div>`;
+                }
+            }).join('');
+            let html = `
+<div class="translate-wrapper">
+  <div class="translate-box">
+    <div class="from-side">
+      <div class="translate-title">
+        <div class="translate-lang">${langDomFrom}<svg id="dropdown-from" width="24" height="24" viewBox="0 0 24 24" class="translate-dropdown"><path d="M5.41 7.59L4 9l8 8 8-8-1.41-1.41L12 14.17"/></svg></div>
+        <button class="translate-btn" title="点击翻译左侧文本">翻译</button>
+      </div>
+      <textarea class="translate-textarea" placeholder="请输入要翻译的内容">${selectedText}</textarea>
+      <div class="translate-toolbar"><span id="word-count">字数：${selectedText.length}</span></div>
+    </div>
+    <div class="to-side">
+      <div class="translate-title">
+        <div class="translate-lang">${langDomTo}<svg id="dropdown-to" width="24" height="24" viewBox="0 0 24 24" class="translate-dropdown"><path d="M5.41 7.59L4 9l8 8 8-8-1.41-1.41L12 14.17"/></svg></div>
+      </div>
+      <div class="translate-target">${translatedText}</div>
+      <div class="translate-toolbar">
+        <svg class="translate-copy" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" width="18" height="18">
+          <path d="M672 832H224c-52.928 0-96-43.072-96-96V160c0-52.928 43.072-96 96-96h448c52.928 0 96 43.072 96 96v576c0 52.928-43.072 96-96 96zM224 128c-17.632 0-32 14.368-32 32v576c0 17.664 14.368 32 32 32h448c17.664 0 32-14.336 32-32V160c0-17.632-14.336-32-32-32H224z"/>
+          <path
+            d="M800 960H320c-17.664 0-32-14.304-32-32s14.336-32 32-32h480c17.664 0 32-14.336 32-32V256c0-17.664 14.304-32 32-32s32 14.336 32 32v608c0 52.928-43.072 96-96 96zM544 320H288c-17.664 0-32-14.336-32-32s14.336-32 32-32h256c17.696 0 32 14.336 32 32s-14.304 32-32 32zm64 160H288.032c-17.664 0-32-14.336-32-32s14.336-32 32-32H608c17.696 0 32 14.336 32 32s-14.304 32-32 32z"/>
+          <path d="M608 640H288c-17.664 0-32-14.304-32-32s14.336-32 32-32h320c17.696 0 32 14.304 32 32s-14.304 32-32 32z"/>
+        </svg>
+        <span class="translate-copy-tip"></span></div>
+    </div>
+  </div>
+  <div class="translate-footer"><a href="https://www.youxiaohou.com/tool/install-translate.html" target="_blank">油小猴翻译助手</a> 为您提供翻译服务</div>
+</div>
+            `;
 
             Swal.fire({
                 width: '1200px',
@@ -227,6 +261,42 @@
             });
             document.querySelector('.translate-textarea').addEventListener("input", async (e) => {
                 document.querySelector('#word-count').innerHTML = '字数：' + e.target.value.length;
+            });
+            document.querySelector('#dropdown-from').addEventListener("click", async (e) => {
+                this.setFromLanguage()
+            });
+            document.querySelector('#dropdown-to').addEventListener("click", async (e) => {
+                this.setToLanguage()
+            });
+            document.querySelector('.from-side .translate-lang').addEventListener("click", async (e) => {
+                let current = e.target, parent = e.currentTarget;
+                let lang = current?.dataset?.lang;
+                if (lang) {
+                    let items = parent.querySelectorAll('.item');
+                    for (let i = 0; i < items.length; i++) {
+                        items[i].classList.remove("on");
+                    }
+                    current.classList.add('on');
+                    util.setValue('from', lang);
+                    let text = document.querySelector('.translate-textarea').value;
+                    let translated = await this.translate(text, false);
+                    document.querySelector('.translate-target').innerHTML = translated;
+                }
+            });
+            document.querySelector('.to-side .translate-lang').addEventListener("click", async (e) => {
+                let current = e.target, parent = e.currentTarget;
+                let lang = current?.dataset?.lang;
+                if (lang) {
+                    let items = parent.querySelectorAll('.item');
+                    for (let i = 0; i < items.length; i++) {
+                        items[i].classList.remove("on");
+                    }
+                    current.classList.add('on');
+                    util.setValue('to', lang);
+                    let text = document.querySelector('.translate-textarea').value;
+                    let translated = await this.translate(text, false);
+                    document.querySelector('.translate-target').innerHTML = translated;
+                }
             });
             //自动聚焦
             let textarea = document.querySelector('.translate-textarea');
@@ -342,38 +412,42 @@
 
         addPluginStyle() {
             let style = `
-                .translate-container { z-index: 99999!important; }
-                .translate-popup { font-size: 14px !important;padding:0 !important; }
-                .translate-d-container { z-index: 999999!important;}
-                .translate-d-popup { font-size: 14px !important;}
-                .translate-content { padding:0 !important; }
-                .translate-setting-label { display: flex;align-items: center;justify-content: space-between;padding-top: 20px; }
-                .translate-setting-checkbox { width: 16px;height: 16px; }
-                .translate-wrapper { margin: 28px 24px 10px;}
-                .translate-box { display: flex; min-height: calc(100vh - 130px)}
-                .translate-box .left-side { flex:1; width:50%; border: 1px solid #ddd; border-radius: 15px 0 0 15px; border-right:none;color: #666;position: relative;padding: 0 0 36px;}
-                .translate-box .right-side { flex:1; width:50%; border:1px solid #ddd; border-radius: 0 15px 15px 0; border-left: none;background: #f5f5f5;color: #000;position: relative;padding: 0 0 36px;}
-                .translate-box .translate-textarea { width: 100%; height: calc(100% - 50px); border-radius: 15px 0 0 15px; resize: none; line-height: 28px; font-size: 16px; color: #666; border: none; text-align: left; padding: 20px; box-sizing: border-box; outline:none; overflow-wrap: break-word; word-break: break-word; word-wrap: break-word;}
-                .translate-box .translate-textarea::-webkit-scrollbar { width: 6px; height: 6px;}
-                .translate-box .translate-textarea::-webkit-scrollbar-thumb { background-color: rgba(85,85,85,.4)}
-                .translate-box .translate-textarea::-webkit-scrollbar-thumb, .translate-box .translate-textarea::-webkit-scrollbar-thumb:hover { border-radius: 5px; box-shadow: inset 0 0 6px rgb(0 0 0 / 20%);}
-                .translate-box .translate-toolbar { position: absolute; bottom: 0; font-size: 13px; color: #999; height: 36px; text-align: right; left: 20px; right: 20px; display: flex; align-items: center; justify-content: end; gap:5px}
-                .translate-box .translate-target { width: 100%; line-height: 28px; font-size: 16px; border: none; text-align: left; white-space: pre-wrap;  padding: 20px; box-sizing: border-box; overflow-wrap: break-word; word-break: break-word; word-wrap: break-word; position: relative;}
-                .translate-box .translate-title { border-bottom: 1px solid #ddd; height: 48px;line-height: 48px; padding: 0 20px 0 10px; position: sticky; top: -10px;display: flex;align-items:center;justify-content: space-between; z-index: 99999; background: #fff;}         
-                .translate-box .translate-lang { position:relative; color:#1a73e8;padding: 0 13px; cursor:pointer;font-size:15px;font-weight: 700}                
-                .translate-box .translate-lang:after { content: '';display:block;position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 2px; background: #1a73e8;}                
-                .translate-box .translate-lang:hover { background: #f6fafe;}                
-                .translate-box .left-side .translate-title { border-radius: 15px 0 0 0;}
-                .translate-box .right-side .translate-title { border-radius: 0 15px 0 0;}
-                .translate-btn { border: 0; border-radius: 5px; color: #fff; font-size: 14px; padding: 8px 13px; background: #4396fc; cursor: pointer; line-height: 1;}
-                .translate-btn:hover { background: #187efa;}
-                .translate-copy {cursor: pointer;opacity: 0.2;transition: opacity .3s}
-                .translate-copy:hover {opacity: 0.5;transition: opacity .3s}
-                .translate-footer {margin-top: 8px; font-size: 14px; color: #999}
-                .translate-footer a {color: rgb(26 115 232 / 70%)}
-                .translate-footer a:hover {color: rgb(26 115 232 / 90%)}
-                .swal2-close { font-size: 26px;!important}
-                .swal2-close:focus {box-shadow:none!important}
+      .translate-container { z-index: 99999!important; }
+      .translate-popup { font-size: 14px !important;padding:0 !important; border-radius: 10px;}
+      .translate-d-container { z-index: 999999!important;}
+      .translate-d-popup { font-size: 14px !important;}
+      .translate-content { padding:0 !important; }
+      .translate-setting-label { display: flex;align-items: center;justify-content: space-between;padding-top: 20px; }
+      .translate-setting-checkbox { width: 16px;height: 16px; }
+      .translate-wrapper { margin: 28px 24px 10px;}
+      .translate-box { display: flex; min-height: calc(100vh - 130px);box-shadow: 1px 1px 9px #eaeaea; border-radius: 15px;}
+      .translate-box .from-side { flex:1; width:50%; border: 1px solid #ddd; border-radius: 15px 0 0 15px; border-right:none;color: #666;position: relative;padding: 0 0 36px;}
+      .translate-box .to-side { flex:1; width:50%; border:1px solid #ddd; border-radius: 0 15px 15px 0; border-left: none;background: #f5f5f5;color: #000;position: relative;padding: 0 0 36px;}
+      .translate-box .translate-textarea { width: 100%; height: calc(100% - 50px); border-radius: 15px 0 0 15px; resize: none; line-height: 28px; font-size: 16px; color: #666; border: none; text-align: left; padding: 20px; box-sizing: border-box; outline:none; overflow-wrap: break-word; word-break: break-word; word-wrap: break-word;}
+      .translate-box .translate-textarea::-webkit-scrollbar { width: 6px; height: 6px;}
+      .translate-box .translate-textarea::-webkit-scrollbar-thumb { background-color: rgba(85,85,85,.4)}
+      .translate-box .translate-textarea::-webkit-scrollbar-thumb, .translate-box .translate-textarea::-webkit-scrollbar-thumb:hover { border-radius: 5px; box-shadow: inset 0 0 6px rgb(0 0 0 / 20%);}
+      .translate-box .translate-toolbar { position: absolute; bottom: 0; font-size: 13px; color: #999; height: 36px; text-align: right; left: 20px; right: 20px; display: flex; align-items: center; justify-content: end; gap:5px}
+      .translate-box .translate-target { width: 100%; line-height: 28px; font-size: 16px; border: none; text-align: left; white-space: pre-wrap;  padding: 20px; box-sizing: border-box; overflow-wrap: break-word; word-break: break-word; word-wrap: break-word; position: relative;}
+      .translate-box .translate-title { border-bottom: 1px solid #ddd; height: 48px;line-height: 48px; padding: 0 20px 0 10px; position: sticky; top: -10px;display: flex;align-items:center;justify-content: space-between; z-index: 99999; background: #fff;user-select:none}
+      .translate-box .translate-lang { display: flex; align-items:center;}
+      .translate-box .translate-lang .item { position:relative; color:#666;padding: 0 15px; cursor:pointer;font-size:15px;font-weight: 500}
+      .translate-box .translate-lang .item.on { color:#1a73e8;font-weight: 700}
+      .translate-box .translate-lang .item.on:after { content: '';display:block;position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 2px; background: #1a73e8;}
+      .translate-box .translate-lang .item:hover { background: #f6fafe; color:#333}
+      .translate-box .translate-dropdown { cursor:pointer; fill: #999;margin-left:20px; padding:5px;border-radius:50%}
+      .translate-box .translate-dropdown:hover { fill: #666; background:#f5f5f5 }
+      .translate-box .from-side .translate-title { border-radius: 15px 0 0 0;}
+      .translate-box .to-side .translate-title { border-radius: 0 15px 0 0;}
+      .translate-btn { border: 0; border-radius: 5px; color: #fff; font-size: 14px; padding: 8px 13px; background: #4396fc; cursor: pointer; line-height: 1;}
+      .translate-btn:hover { background: #187efa;}
+      .translate-copy {cursor: pointer;opacity: 0.2;transition: opacity .3s}
+      .translate-copy:hover {opacity: 0.5;transition: opacity .3s}
+      .translate-footer {margin-top: 8px; font-size: 14px; color: #999}
+      .translate-footer a {color: rgb(26 115 232 / 70%)}
+      .translate-footer a:hover {color: rgb(26 115 232 / 90%)}
+      .swal2-close { font-size: 26px;!important}
+      .swal2-close:focus {box-shadow:none!important}
             `;
 
             if (document.head) {
