@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name              超级翻译助手
 // @namespace         https://github.com/syhyz1990/translate
-// @version           1.0.5
+// @version           1.0.6
 // @author            YouXiaoHou
 // @description       用鼠标选中文字，按下快捷键（默认为F9），可自动翻译文字。已支持超过 14 种语言。
 // @license           MIT
@@ -10,10 +10,10 @@
 // @updateURL         https://www.youxiaohou.com/translate.user.js
 // @downloadURL       https://www.youxiaohou.com/translate.user.js
 // @match             *://*/*
-// @require           https://unpkg.com/jquery@3.6.0/dist/jquery.min.js
-// @require           https://unpkg.com/sweetalert2@10.16.6/dist/sweetalert2.min.js
-// @require           https://unpkg.com/hotkeys-js/dist/hotkeys.min.js
-// @resource          swalStyle https://unpkg.com/sweetalert2@10.16.6/dist/sweetalert2.min.css
+// @require           https://registry.npmmirror.com/jquery/3.7.0/files/dist/jquery.min.js
+// @require           https://registry.npmmirror.com/sweetalert2/10.16.6/files/dist/sweetalert2.min.js
+// @require           https://registry.npmmirror.com/hotkeys-js/3.13.3/files/dist/hotkeys.min.js
+// @resource          swalStyle https://registry.npmmirror.com/sweetalert2/10.16.6/files/dist/sweetalert2.min.css
 // @connect           translate.youxiaohou.com
 // @run-at            document-idle
 // @noframes
